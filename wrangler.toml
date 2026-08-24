@@ -1,10 +1,21 @@
-# Cloudflare Pages configuration for Skin by Kassie.
+# Reference file for local development only (`wrangler pages dev .`).
+#
+# IMPORTANT: this file is deliberately kept out of the production build path.
+# Cloudflare Pages' newer build system reads `pages_build_output_dir` from a
+# file like this one and lets it override whatever's configured in the
+# dashboard — and for a plain static site with no build step, that value
+# doesn't parse the way it needs to, which causes Pages to wrongly assume
+# this is a Node project and try to run `npm run build` (there is no
+# package.json here, so that fails outright). Production build settings for
+# this project live entirely in the Cloudflare dashboard instead:
+#   Build command:            (empty)
+#   Build output directory:   /
+#
 # The KV namespace ID below is already live — created 2026-08-23.
-# The R2 bucket still needs creating once R2 is enabled on the account — see SETUP.md.
+# The R2 bucket still needs creating once R2 is enabled on the account.
 
 name = "skinbyklb"
 compatibility_date = "2026-08-01"
-pages_build_output_dir = "."
 
 # Prices, service details and the photo index
 [[kv_namespaces]]
