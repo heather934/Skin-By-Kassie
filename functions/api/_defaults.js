@@ -9,6 +9,8 @@
 export const KEY = {
   services: "content:services",
   gallery: "content:gallery",
+  copy: "content:copy",
+  testimonials: "content:testimonials",
 };
 
 export const DEFAULT_SERVICES = [
@@ -107,5 +109,36 @@ export const DEFAULT_SERVICES = [
     duration: "30–90 min",
     tagline: "Delicate linework, lettering and small custom pieces.",
     hidden: false,
+  },
+];
+
+// "About the studio" and "Meet Kassie" — editable from the admin Content tab.
+export const DEFAULT_COPY = {
+  aboutStudio: {
+    heading: "Unhurried by design",
+    body: "One chair, one client, and as long as the appointment actually needs. "
+          "Nothing is scripted in advance and nothing gets rushed to make room for "
+          "the next booking.",
+  },
+  meetKassie: {
+    heading: "Hi, I'm Kassie",
+    body: "Placeholder bio. A short, warm introduction goes here — how long you've "
+          "been doing this, what drew you to skincare, and the kind of clients you "
+          "love working with. Two or three sentences is plenty.",
+  },
+};
+
+// Seed testimonial so the homepage never shows an empty section before Kassie
+// adds her own or a client review gets approved.
+export const DEFAULT_TESTIMONIALS = [
+  {
+    id: "seed-1",
+    quote: "Placeholder testimonial. Swap this for a real review — the specific "
+           "ones land hardest, so pick a client who mentions how their skin "
+           "actually changed.",
+    author: "Client name — Treatment",
+    approved: true,
+    source: "kassie",
+    submittedAt: null,
   },
 ];

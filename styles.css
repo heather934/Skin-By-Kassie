@@ -259,7 +259,7 @@ p:last-child { margin-bottom: 0; }
     bottom: 0;
     z-index: 115;
     padding: 0.75rem var(--gutter);
-    background: rgba(217, 167, 158, 0.96);
+    background: rgba(217, 167, 158, 1);
     backdrop-filter: blur(10px);
     border-top: 1px solid rgba(255, 255, 255, 0.55);
     box-shadow: 0 -8px 24px rgba(23, 19, 15, 0.12);
@@ -275,6 +275,11 @@ p:last-child { margin-bottom: 0; }
      falls back to 0 if the device doesn't need it. */
   .mobile-book { padding-bottom: calc(0.75rem + env(safe-area-inset-bottom)); }
   body { padding-bottom: calc(68px + env(safe-area-inset-bottom)); }
+
+  /* Hide the fixed bar while the hero's own Book Now button is already
+     visible on screen — no reason to show the same CTA twice, stacked a
+     few inches apart, the moment the page loads. main.js toggles this. */
+  .mobile-book.is-redundant { display: none; }
 }
 
 /* ---------- Dropdown panel — the white accent surface ---------- */
@@ -1036,3 +1041,18 @@ p:last-child { margin-bottom: 0; }
   object-fit: cover;
   border: 1px solid rgba(255, 255, 255, 0.6);
 }
+
+/* ---------- Testimonials (one or many) ---------- */
+
+.testimonials {
+  display: grid;
+  gap: 3rem;
+}
+.testimonials .quote + .quote {
+  padding-top: 3rem;
+  border-top: 1px solid rgba(23, 19, 15, 0.18);
+}
+
+/* ---------- Footer credit line ---------- */
+/* No color override needed — it inherits .site-footer's ink-muted already,
+   which is correct for the rose-gold footer background. */

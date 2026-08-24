@@ -61,6 +61,21 @@
     });
   }
 
+  // Hide the fixed mobile "Book now" bar while the hero's own Book button
+  // is already on screen — avoids two Book Now buttons stacked a few
+  // inches apart the moment the page loads. Pages without a hero (every
+  // interior page) simply skip this; the bar behaves as always there.
+  var heroBtn = document.querySelector(".hero .btn");
+  var mobileBook = document.querySelector(".mobile-book");
+  if (heroBtn && mobileBook && "IntersectionObserver" in window) {
+    var heroObserver = new IntersectionObserver(function (entries) {
+      entries.forEach(function (entry) {
+        mobileBook.classList.toggle("is-redundant", entry.isIntersecting);
+      });
+    }, { threshold: 0.3 });
+    heroObserver.observe(heroBtn);
+  }
+
   // Scroll reveal
   var reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var items = document.querySelectorAll(".reveal");

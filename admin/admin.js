@@ -7,7 +7,9 @@
   /* ---------------- tabs ---------------- */
   var tabs = [
     { btn: $("tab-prices"), panel: $("panel-prices") },
-    { btn: $("tab-photos"), panel: $("panel-photos") }
+    { btn: $("tab-content"), panel: $("panel-content") },
+    { btn: $("tab-photos"), panel: $("panel-photos") },
+    { btn: $("tab-reviews"), panel: $("panel-reviews") }
   ];
   tabs.forEach(function (t) {
     t.btn.addEventListener("click", function () {
@@ -290,6 +292,170 @@
     });
   });
 
+  /* ---------------- content (About the studio / Meet Kassie) ---------------- */
+  function renderCopy(copy) {
+    var host = $("content-body");
+    host.className = "";
+    var sections = [
+      { key: "aboutStudio", label: "About the studio", data: copy.aboutStudio },
+      { key: "meetKassie", label: "Meet Kassie", data: copy.meetKassie }
+    ];
+    host.innerHTML = sections.map(function (s, i) {
+      return '' +
+      '<div class="card" data-copy-key="' + s.key + '" style="margin-bottom:1.5rem;">' +
+        "<h3>" + esc(s.label) + "</h3>" +
+        '<div class="field"><label for="cp-h' + i + '">Heading</label>' +
+        '<input type="text" id="cp-h' + i + '" data-f="heading" value="' + esc(s.data.heading) + '"></div>' +
+        '<div class="field"><label for="cp-b' + i + '">Text</label>' +
+        '<textarea id="cp-b' + i + '" data-f="body">' + esc(s.data.body) + "</textarea></div>" +
+        '<button class="btn" type="button" data-save-copy="' + s.key + '">Save</button> ' +
+        '<span class="flash" data-flash-copy="' + s.key + '">Saved</span>' +
+      "</div>";
+    }).join("");
+  }
+
+  document.addEventListener("click", function (e) {
+    var key = e.target.getAttribute && e.target.getAttribute("data-save-copy");
+    if (!key) return;
+    var card = e.target.closest(".card");
+    var heading = card.querySelector('[data-f="heading"]').value;
+    var body = card.querySelector('[data-f="body"]').value;
+    var flash = card.querySelector("[data-flash-copy]");
+
+    e.target.disabled = true;
+    fetch("/api/admin/copy")
+      .then(function (r) { return r.json(); })
+      .then(function (current) {
+        current[key] = { heading: heading, body: body };
+        return fetch("/api/admin/copy", {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(current)
+        });
+      })
+      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function () {
+        e.target.disabled = false;
+        flash.textContent = "Saved — live on the site now";
+        flash.style.color = "";
+        flash.classList.add("show");
+        setTimeout(function () { flash.classList.remove("show"); }, 2200);
+      })
+      .catch(function () {
+        e.target.disabled = false;
+        flash.textContent = "Could not save — try again";
+        flash.style.color = "#8a2f24";
+        flash.classList.add("show");
+      });
+  });
+
+  function loadCopy() {
+    fetch("/api/admin/copy")
+      .then(function (r) {
+        if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
+        if (!r.ok) throw new Error("Your content could not be loaded.");
+        return r.json();
+      })
+      .then(renderCopy)
+      .catch(function (err) {
+        $("content-body").className = "";
+        $("content-body").innerHTML = "";
+        showError("content-error", err.message);
+      });
+  }
+
+  /* ---------------- reviews ---------------- */
+  function renderReviews(list) {
+    var host = $("reviews-body");
+    host.className = "";
+    if (!list.length) {
+      host.innerHTML = '<div class="empty">No reviews yet.</div>';
+      return;
+    }
+    // Pending first, so anything needing a decision is easy to find
+    var sorted = list.slice().sort(function (a, b) {
+      return (a.approved === b.approved) ? 0 : (a.approved ? 1 : -1);
+    });
+    host.innerHTML = sorted.map(function (t) {
+      return '' +
+      '<div class="card' + (t.approved ? "" : " is-hidden") + '" data-id="' + esc(t.id) + '" style="margin-bottom:1rem;">' +
+        '<div class="field"><label>Name</label>' +
+        '<input type="text" data-f="author" value="' + esc(t.author) + '"></div>' +
+        '<div class="field"><label>Review</label>' +
+        '<textarea data-f="quote">' + esc(t.quote) + "</textarea></div>" +
+        '<div class="photo__foot">' +
+          "<span>" + (t.approved ? "Live on site" : "Pending — not shown yet") +
+            (t.source === "client" ? " · from a client" : " · added by you") + "</span>" +
+          "<span>" +
+            '<button class="btn btn--ghost" type="button" data-approve="' + (!t.approved) + '">' +
+              (t.approved ? "Unpublish" : "Approve") + "</button> " +
+            '<button class="btn btn--danger" type="button" data-delete-review>Delete</button>' +
+          "</span>" +
+        "</div>" +
+      "</div>";
+    }).join("");
+  }
+
+  $("panel-reviews").addEventListener("click", function (e) {
+    var card = e.target.closest(".card[data-id]");
+    if (!card) return;
+    var id = card.getAttribute("data-id");
+
+    if (e.target.hasAttribute("data-approve")) {
+      var approved = e.target.getAttribute("data-approve") === "true";
+      var author = card.querySelector('[data-f="author"]').value;
+      var quote = card.querySelector('[data-f="quote"]').value;
+      e.target.disabled = true;
+      fetch("/api/admin/testimonials", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ id: id, approved: approved, author: author, quote: quote })
+      }).then(function () { loadReviews(); }).catch(function () { e.target.disabled = false; });
+    }
+
+    if (e.target.hasAttribute("data-delete-review")) {
+      if (!confirm("Delete this review permanently?")) return;
+      e.target.disabled = true;
+      fetch("/api/admin/testimonials?id=" + encodeURIComponent(id), { method: "DELETE" })
+        .then(function () { loadReviews(); })
+        .catch(function () { e.target.disabled = false; });
+    }
+  });
+
+  $("rv-add").addEventListener("click", function () {
+    var author = $("rv-author").value.trim();
+    var quote = $("rv-quote").value.trim();
+    if (!author || !quote) return;
+    $("rv-add").disabled = true;
+    fetch("/api/admin/testimonials", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ author: author, quote: quote })
+    })
+      .then(function () {
+        $("rv-add").disabled = false;
+        $("rv-author").value = "";
+        $("rv-quote").value = "";
+        loadReviews();
+      })
+      .catch(function () { $("rv-add").disabled = false; });
+  });
+
+  function loadReviews() {
+    fetch("/api/admin/testimonials")
+      .then(function (r) {
+        if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
+        if (!r.ok) throw new Error("Reviews could not be loaded.");
+        return r.json();
+      })
+      .then(function (data) { renderReviews(data.testimonials || []); })
+      .catch(function (err) {
+        $("reviews-body").className = "";
+        $("reviews-body").innerHTML = "";
+        showError("reviews-error", err.message);
+      });
+  }
+
   /* ---------------- load ---------------- */
   function loadContent() {
     fetch("/api/admin/content")
@@ -334,4 +500,6 @@
 
   loadContent();
   loadPhotos();
+  loadCopy();
+  loadReviews();
 })();

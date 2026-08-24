@@ -112,4 +112,91 @@
       });
     })
     .catch(function () { /* placeholders stay */ });
+
+  /* ---------------- about / bio copy ---------------- */
+
+  fetch("/api/copy", { headers: { accept: "application/json" } })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (!data) return;
+      Array.prototype.forEach.call(
+        document.querySelectorAll("[data-copy][data-field]"),
+        function (el) {
+          var section = data[el.getAttribute("data-copy")];
+          var field = el.getAttribute("data-field");
+          if (section && typeof section[field] === "string" && section[field].trim()) {
+            el.textContent = section[field];
+          }
+        }
+      );
+    })
+    .catch(function () { /* built-in copy stays */ });
+
+  /* ---------------- testimonials ---------------- */
+
+  var testimonialHost = document.querySelector("[data-testimonials]");
+  if (testimonialHost) {
+    fetch("/api/testimonials", { headers: { accept: "application/json" } })
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (data) {
+        if (!data || !Array.isArray(data.testimonials) || !data.testimonials.length) return;
+
+        testimonialHost.innerHTML = "";
+        data.testimonials.forEach(function (t) {
+          var fig = document.createElement("figure");
+          fig.className = "quote reveal is-visible";
+
+          var bq = document.createElement("blockquote");
+          bq.textContent = t.quote;
+          fig.appendChild(bq);
+
+          var cap = document.createElement("figcaption");
+          cap.textContent = t.author;
+          fig.appendChild(cap);
+
+          testimonialHost.appendChild(fig);
+        });
+      })
+      .catch(function () { /* built-in placeholder testimonial stays */ });
+  }
+
+  /* ---------------- review submission form ---------------- */
+
+  var reviewForm = document.getElementById("review-form");
+  if (reviewForm) {
+    reviewForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var status = document.getElementById("review-status");
+      var button = reviewForm.querySelector("button[type=submit]");
+
+      var payload = {
+        author: reviewForm.author.value,
+        rating: parseInt(reviewForm.rating.value, 10),
+        quote: reviewForm.quote.value,
+        website: reviewForm.website.value // honeypot
+      };
+
+      button.disabled = true;
+      status.textContent = "Sending…";
+      status.style.color = "";
+
+      fetch("/api/testimonials", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(payload)
+      })
+        .then(function (r) { return r.json().then(function (b) { return { ok: r.ok, b: b }; }); })
+        .then(function (res) {
+          button.disabled = false;
+          if (!res.ok) throw new Error(res.b.error || "That didn't go through.");
+          reviewForm.reset();
+          status.textContent = "Thank you — your review is on its way to Kassie for a quick look before it goes live.";
+        })
+        .catch(function (err) {
+          button.disabled = false;
+          status.textContent = err.message + " Please try again.";
+          status.style.color = "#8a2f24";
+        });
+    });
+  }
 })();

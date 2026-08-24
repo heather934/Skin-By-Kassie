@@ -129,8 +129,8 @@
       </div>
       <div class="reveal">
         <p class="eyebrow">The studio</p>
-        <h2 class="statement statement--ink">Unhurried by <em>design</em></h2>
-        <p style="margin-top:1.75rem">One chair, one client, and as long as the
+        <h2 class="statement statement--ink" data-copy="aboutStudio" data-field="heading">Unhurried by <em>design</em></h2>
+        <p style="margin-top:1.75rem" data-copy="aboutStudio" data-field="body">One chair, one client, and as long as the
            appointment actually needs. Nothing is scripted in advance and nothing gets
            rushed to make room for the next booking.</p>
         <p><a class="btn btn--dark" href="about.html">About the studio</a></p>
@@ -288,8 +288,8 @@
     <div class="wrap editorial">
       <div class="reveal">
         <p class="eyebrow">Meet your esthetician</p>
-        <h2 class="statement statement--ink">Hi, I'm <em>Kassie</em></h2>
-        <p style="margin-top:1.75rem"><em>Placeholder bio.</em> A short, warm
+        <h2 class="statement statement--ink" data-copy="meetKassie" data-field="heading">Hi, I'm <em>Kassie</em></h2>
+        <p style="margin-top:1.75rem" data-copy="meetKassie" data-field="body"><em>Placeholder bio.</em> A short, warm
            introduction — how long you've been licensed, what drew you to skincare,
            and the kind of clients you love working with. Two or three sentences is
            plenty.</p>
@@ -321,12 +321,55 @@
 
   <section class="section section--dark">
     <div class="wrap">
-      <figure class="quote reveal">
-        <blockquote>Placeholder testimonial. Swap this for a real review — the
-        specific ones land hardest, so pick a client who mentions how their skin
-        actually changed.</blockquote>
-        <figcaption>Client name — Treatment</figcaption>
-      </figure>
+      <div class="testimonials" data-testimonials>
+        <figure class="quote reveal">
+          <blockquote>Placeholder testimonial. Swap this for a real review — the
+          specific ones land hardest, so pick a client who mentions how their skin
+          actually changed.</blockquote>
+          <figcaption>Client name — Treatment</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--panel">
+    <div class="wrap">
+      <div class="section__head section__head--center reveal">
+        <p class="eyebrow">Been in?</p>
+        <h2>Leave a review</h2>
+        <hr class="rule rule--center">
+        <p>Every review is read by Kassie before it goes up — so it won't appear
+           right away, but it will be seen.</p>
+      </div>
+      <form class="form review-form" id="review-form" style="max-width:520px;margin-inline:auto;">
+        <div class="field">
+          <label for="review-name">Name</label>
+          <input id="review-name" name="author" type="text" autocomplete="name" required maxlength="80">
+        </div>
+        <div class="field">
+          <label for="review-rating">Rating</label>
+          <select id="review-rating" name="rating">
+            <option value="5">★★★★★ — Excellent</option>
+            <option value="4">★★★★ — Great</option>
+            <option value="3">★★★ — Good</option>
+            <option value="2">★★ — Okay</option>
+            <option value="1">★ — Not great</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="review-quote">Your review</label>
+          <textarea id="review-quote" name="quote" required maxlength="600"
+            placeholder="What was the treatment, and how did it go?"></textarea>
+        </div>
+        <!-- Honeypot — hidden from real visitors via CSS, bots that fill every
+             field on a scraped form usually fill this one too. -->
+        <div class="field" aria-hidden="true" style="position:absolute;left:-9999px;">
+          <label for="review-website">Website</label>
+          <input id="review-website" name="website" type="text" tabindex="-1" autocomplete="off">
+        </div>
+        <button class="btn" type="submit">Submit review</button>
+        <p class="form__note" id="review-status"></p>
+      </form>
     </div>
   </section>
 
@@ -392,6 +435,7 @@
     <div class="site-footer__base">
       <span>&copy; 2026 Skin by Kassie</span>
       <span>By appointment only</span>
+      <span>Site design by Song Bird Designs</span>
     </div>
   </div>
 </footer>
