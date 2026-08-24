@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Studio admin — Skin by Kassie</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600&amp;family=Jost:wght@300;400;500&amp;display=swap" rel="stylesheet">
+<style>
+  :root{
+    --rose:#d9a79e; --rose-light:#e6c2ba; --rose-deep:#c08d82; --rose-line:#b8776c;
+    --black:#17130f; --black-2:#211a16;
+    --ink:#17130f; --ink-muted:rgba(23,19,15,.62);
+    --white:#ffffff; --white-muted:rgba(255,255,255,.66);
+    --ok:#2f6b46; --bad:#8a2f24;
+    --serif:"Cormorant Garamond",Georgia,serif;
+    --sans:"Jost","Helvetica Neue",Arial,sans-serif;
+  }
+  *,*::before,*::after{box-sizing:border-box}
+  body{margin:0;background:var(--rose);color:var(--ink);font-family:var(--sans);
+       font-weight:300;line-height:1.6;-webkit-font-smoothing:antialiased;
+       padding-bottom:120px}
+  :focus-visible{outline:2px solid var(--ink);outline-offset:2px}
+
+  header{background:var(--black);color:var(--white);padding:1.5rem 1.25rem 0}
+  .head-top{display:flex;align-items:baseline;justify-content:space-between;gap:1rem;
+            max-width:900px;margin:0 auto}
+  h1{font-family:var(--serif);font-weight:400;font-size:1.6rem;margin:0;letter-spacing:.04em;color:var(--white)}
+  h1 span{color:var(--rose)}
+  .who{font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+       color:var(--white-muted)}
+
+  .tabs{display:flex;gap:.25rem;max-width:900px;margin:1.25rem auto 0}
+  .tab{flex:1;background:none;border:0;border-bottom:2px solid transparent;
+       color:var(--white-muted);font-family:var(--sans);font-size:.78rem;
+       font-weight:500;letter-spacing:.16em;text-transform:uppercase;
+       padding:.9rem .5rem;cursor:pointer}
+  .tab[aria-selected="true"]{color:var(--white);border-bottom-color:var(--white)}
+
+  main{max-width:900px;margin:0 auto;padding:1.5rem 1.25rem}
+  .panel[hidden]{display:none}
+
+  .intro{font-size:.9rem;color:var(--ink-muted);margin:0 0 1.5rem}
+
+  h2{font-family:var(--serif);font-weight:400;font-size:1.5rem;color:var(--ink);
+     margin:2.5rem 0 .25rem}
+  h2:first-of-type{margin-top:0}
+  .hint{font-size:.85rem;color:var(--ink-muted);margin:0 0 1.25rem}
+
+  .card{background:var(--rose-light);border:1px solid rgba(255,255,255,.6);padding:1.25rem;
+        margin-bottom:1rem}
+  .card.is-hidden{opacity:.55}
+  .card h3{font-family:var(--serif);font-weight:400;font-size:1.3rem;color:var(--ink);
+           margin:0 0 .9rem}
+
+  .row{display:grid;grid-template-columns:1fr 1fr;gap:.9rem}
+  @media(max-width:520px){.row{grid-template-columns:1fr}}
+
+  label{display:block;font-size:.68rem;font-weight:600;letter-spacing:.18em;
+        text-transform:uppercase;color:var(--white);margin-bottom:.35rem}
+  input[type=text],textarea,select{
+    width:100%;font-family:var(--sans);font-size:1rem;font-weight:300;color:var(--ink);
+    background:var(--rose-light);border:1px solid rgba(255,255,255,.7);border-radius:0;
+    padding:.8rem .9rem}
+  input:focus,textarea:focus,select:focus{border-color:var(--white);outline:none}
+  textarea{resize:vertical;min-height:76px}
+  .field{margin-bottom:.9rem}
+  .field:last-child{margin-bottom:0}
+
+  .toggle{display:flex;align-items:center;gap:.6rem;margin-top:1rem;
+          font-size:.85rem;color:var(--ink-muted);cursor:pointer}
+  .toggle input{width:20px;height:20px;accent-color:var(--ink)}
+
+  .btn{display:inline-block;font-family:var(--sans);font-size:.74rem;font-weight:500;
+       letter-spacing:.18em;text-transform:uppercase;text-decoration:none;
+       padding:.95rem 1.9rem;border:1px solid var(--ink);background:var(--ink);
+       color:var(--white);cursor:pointer;transition:background .25s}
+  .btn:hover{background:var(--black-2)}
+  .btn:disabled{opacity:.45;cursor:default}
+  .btn--ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
+  .btn--ghost:hover{background:var(--ink);color:var(--white)}
+  .btn--ghost:hover{background:rgba(255,255,255,.16)}
+  .btn--danger{background:transparent;border-color:rgba(138,47,36,.5);color:var(--bad);
+               padding:.6rem 1.1rem;font-size:.66rem}
+  .btn--danger:hover{background:rgba(138,47,36,.1)}
+  .btn--wide{width:100%;text-align:center}
+
+  /* Extras rows */
+  .extra{display:grid;grid-template-columns:1fr 130px auto;gap:.6rem;align-items:end;
+         margin-bottom:.7rem}
+  @media(max-width:520px){.extra{grid-template-columns:1fr 100px auto}}
+
+  /* Save bar */
+  .savebar{position:fixed;left:0;right:0;bottom:0;background:var(--black);
+           border-top:1px solid rgba(255,255,255,.5);padding:.9rem 1.25rem;
+           display:flex;align-items:center;justify-content:space-between;gap:1rem;
+           z-index:20}
+  .savebar__inner{max-width:900px;margin:0 auto;width:100%;display:flex;
+                  align-items:center;justify-content:space-between;gap:1rem}
+  .savestate{font-size:.78rem;color:var(--white-muted)}
+  .savestate.ok{color:var(--rose)}
+  .savestate.bad{color:#e6928a}
+
+  /* Photos */
+  .uploader{border:1px dashed rgba(255,255,255,.7);background:var(--rose-light);
+            padding:1.75rem 1.25rem;text-align:center;margin-bottom:1.5rem}
+  .uploader p{margin:.75rem 0 0;font-size:.85rem;color:var(--ink-muted)}
+  input[type=file]{display:none}
+
+  .queue{margin-bottom:1.5rem}
+  .queue__item{display:flex;align-items:center;gap:.75rem;font-size:.85rem;
+               padding:.5rem 0;border-bottom:1px solid rgba(255,255,255,.5)}
+  .queue__bar{flex:1;height:3px;background:rgba(255,255,255,.6);position:relative}
+  .queue__bar i{position:absolute;inset:0 auto 0 0;background:var(--ink);
+                transition:width .3s}
+
+  .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));
+          gap:1rem}
+  .photo{background:var(--rose-light);border:1px solid rgba(255,255,255,.6)}
+  .photo img{display:block;width:100%;aspect-ratio:4/5;object-fit:cover}
+  .photo__body{padding:.85rem}
+  .photo__body .field{margin-bottom:.6rem}
+  .photo__foot{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+  .flash{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ok);
+         opacity:0;transition:opacity .3s}
+  .flash.show{opacity:1}
+
+  .empty{padding:2.5rem 1rem;text-align:center;color:var(--ink-muted);font-size:.9rem;
+         border:1px solid rgba(255,255,255,.3);background:var(--rose-light)}
+  .loading{padding:2rem 0;text-align:center;color:var(--ink-muted);font-size:.9rem}
+  .error{background:rgba(230,146,138,.1);border-left:2px solid var(--bad);
+         padding:1rem 1.15rem;font-size:.9rem;color:var(--bad);margin-bottom:1.25rem}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="head-top">
+    <h1>Skin by <span>Kassie</span> — Studio admin</h1>
+    <span class="who" id="who"></span>
+  </div>
+  <div class="tabs" role="tablist">
+    <button class="tab" role="tab" id="tab-prices" aria-controls="panel-prices" aria-selected="true">Prices</button>
+    <button class="tab" role="tab" id="tab-photos" aria-controls="panel-photos" aria-selected="false">Photos</button>
+  </div>
+</header>
+
+<main>
+
+  <!-- ======================= PRICES ======================= -->
+  <section class="panel" id="panel-prices" role="tabpanel" aria-labelledby="tab-prices">
+    <p class="intro">Change a price, a length, or the one-line description that appears
+      under each service. Nothing goes live until you press Save.</p>
+
+    <div id="prices-error"></div>
+    <div id="prices-body" class="loading">Loading your services…</div>
+
+    <h2>Add-ons</h2>
+    <p class="hint">Extra items that show up as a short list on the services page —
+      things like a brow tint added to a facial.</p>
+    <div id="extras"></div>
+    <button class="btn btn--ghost" id="add-extra" type="button">Add an item</button>
+  </section>
+
+  <!-- ======================= PHOTOS ======================= -->
+  <section class="panel" id="panel-photos" role="tabpanel" aria-labelledby="tab-photos" hidden>
+    <p class="intro">Photos appear on the gallery page as soon as they finish uploading.
+      Big photos from your phone are shrunk automatically before they're sent.</p>
+
+    <div class="uploader">
+      <button class="btn" id="pick" type="button">Choose photos</button>
+      <input type="file" id="file" accept="image/*" multiple>
+      <p>You can pick more than one at a time.</p>
+    </div>
+
+    <div class="field" style="max-width:280px">
+      <label for="upload-category">Add these to</label>
+      <select id="upload-category">
+        <option value="before-after">Before &amp; after</option>
+        <option value="detail">Lashes, brows &amp; finish</option>
+        <option value="studio">Inside the studio</option>
+      </select>
+    </div>
+
+    <div class="queue" id="queue"></div>
+    <div id="photos-error"></div>
+    <div id="photos-body" class="loading">Loading your photos…</div>
+  </section>
+
+</main>
+
+<div class="savebar" id="savebar" hidden>
+  <div class="savebar__inner">
+    <span class="savestate" id="savestate">You have unsaved changes</span>
+    <button class="btn" id="save" type="button">Save changes</button>
+  </div>
+</div>
+
+<script src="admin.js"></script>
+</body>
+</html>

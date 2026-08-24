@@ -1,0 +1,17 @@
+# Cloudflare Pages configuration for Skin by Kassie.
+# The KV namespace ID below is already live — created 2026-08-23.
+# The R2 bucket still needs creating once R2 is enabled on the account — see SETUP.md.
+
+name = "skinbyklb"
+compatibility_date = "2026-08-01"
+pages_build_output_dir = "."
+
+# Prices, service details and the photo index
+[[kv_namespaces]]
+binding = "CONTENT"
+id = "c7ea670128bb4756b8c8cbb41fa08de5"
+
+# Before-and-after photos
+[[r2_buckets]]
+binding = "PHOTOS"
+bucket_name = "skinbyklb-photos"

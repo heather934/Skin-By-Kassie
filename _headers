@@ -1,0 +1,24 @@
+# Keep the admin panel out of search results, out of caches, and out of AI training.
+/admin/*
+  X-Robots-Tag: noindex, nofollow, noai, noimageai
+  Cache-Control: no-store
+  Referrer-Policy: no-referrer
+
+/api/admin/*
+  Cache-Control: no-store
+
+# Baseline hardening for the whole site.
+/*
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: strict-origin-when-cross-origin
+  X-Frame-Options: SAMEORIGIN
+  Strict-Transport-Security: max-age=63072000; includeSubDomains; preload
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()
+  Content-Security-Policy: default-src 'self'; script-src 'self' https://static.cloudflareinsights.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://cloudflareinsights.com; frame-ancestors 'self'; base-uri 'self'; form-action 'self'; object-src 'none'
+  X-Robots-Tag: noai, noimageai
+
+# The gallery photos specifically — same noai/noimageai signal, explicit on the
+# image responses themselves in case a scraper reads image headers rather
+# than the page that embeds them.
+/img/*
+  X-Robots-Tag: noai, noimageai
