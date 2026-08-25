@@ -13,11 +13,15 @@ const json = (data, status = 200) =>
   });
 
 export async function onRequestGet({ env }) {
-  const stored = await env.CONTENT.get(KEY.copy, { type: "json" });
-  return json({
-    aboutStudio: stored?.aboutStudio || DEFAULT_COPY.aboutStudio,
-    meetKassie: stored?.meetKassie || DEFAULT_COPY.meetKassie,
-  });
+  try {
+    const stored = await env.CONTENT.get(KEY.copy, { type: "json" });
+    return json({
+      aboutStudio: stored?.aboutStudio || DEFAULT_COPY.aboutStudio,
+      meetKassie: stored?.meetKassie || DEFAULT_COPY.meetKassie,
+    });
+  } catch (err) {
+    return json({ error: `Could not load content: ${err.message}` }, 500);
+  }
 }
 
 export async function onRequestPut({ request, env }) {

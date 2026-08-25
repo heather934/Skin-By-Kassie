@@ -26,8 +26,12 @@ async function writeAll(env, testimonials) {
 }
 
 export async function onRequestGet({ env }) {
-  const all = await readAll(env);
-  return json({ testimonials: all });
+  try {
+    const all = await readAll(env);
+    return json({ testimonials: all });
+  } catch (err) {
+    return json({ error: `Could not load reviews: ${err.message}` }, 500);
+  }
 }
 
 export async function onRequestPost({ request, env }) {

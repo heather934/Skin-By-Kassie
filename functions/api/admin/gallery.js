@@ -30,8 +30,12 @@ async function writeIndex(env, index) {
 }
 
 export async function onRequestGet({ env }) {
-  const index = await readIndex(env);
-  return json(index);
+  try {
+    const index = await readIndex(env);
+    return json(index);
+  } catch (err) {
+    return json({ error: `Could not load photos: ${err.message}` }, 500);
+  }
 }
 
 export async function onRequestPost({ request, env, data }) {

@@ -116,35 +116,52 @@ function originIsTrusted(request) {
 export async function onRequest(context) {
   const { request, env, next } = context;
 
-  if (!env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD || !env.ADMIN_EMAIL) {
-    return deny("Admin access is not configured yet.");
-  }
-
-  if (request.method !== "GET" && !originIsTrusted(request)) {
-    return deny("That request didn't come from this site.");
-  }
-
-  const token =
-    request.headers.get("Cf-Access-Jwt-Assertion") ||
-    (request.headers.get("Cookie") || "")
-      .split(";")
-      .map((c) => c.trim())
-      .find((c) => c.startsWith("CF_Authorization="))
-      ?.slice("CF_Authorization=".length);
-
-  if (!token) return deny("Not signed in.");
-
-  let payload;
   try {
-    payload = await verifyAccessToken(token, env);
+    if (!env.ACCESS_TEAM_DOMAIN || !env.ACCESS_AUD || !env.ADMIN_EMAIL) {
+      return deny("Admin access is not configured yet.");
+    }
+
+    if (request.method !== "GET" && !originIsTrusted(request)) {
+      return deny("That request didn't come from this site.");
+    }
+
+    const token =
+      request.headers.get("Cf-Access-Jwt-Assertion") ||
+      (request.headers.get("Cookie") || "")
+        .split(";")
+        .map((c) => c.trim())
+        .find((c) => c.startsWith("CF_Authorization="))
+        ?.slice("CF_Authorization=".length);
+
+    if (!token) return deny("Not signed in.");
+
+    let payload;
+    try {
+      payload = await verifyAccessToken(token, env);
+    } catch (err) {
+      return deny("Sign-in could not be verified.");
+    }
+
+    const allowed = env.ADMIN_EMAIL.split(",").map((e) => e.trim().toLowerCase());
+    const email = (payload.email || "").toLowerCase();
+    if (!allowed.includes(email)) return deny("This account is not allowed in.");
+
+    // Belt-and-suspenders: context.data should already be an object per
+    // Cloudflare's own docs, but don't let an unexpected runtime crash the
+    // whole request over a single non-essential value. This is only ever
+    // read for logging/audit purposes downstream — never for the actual
+    // authorization decision, which is already fully decided by this point.
+    try {
+      context.data = context.data || {};
+      context.data.adminEmail = email;
+    } catch {
+      // Non-fatal — proceed without it rather than fail the whole request.
+    }
+
+    return next();
   } catch (err) {
-    return deny("Sign-in could not be verified.");
+    // Anything unexpected lands here instead of surfacing as a generic,
+    // unhelpful platform error page — at least this is diagnosable.
+    return deny(`Unexpected error: ${err.message}`, 500);
   }
-
-  const allowed = env.ADMIN_EMAIL.split(",").map((e) => e.trim().toLowerCase());
-  const email = (payload.email || "").toLowerCase();
-  if (!allowed.includes(email)) return deny("This account is not allowed in.");
-
-  context.data.adminEmail = email;
-  return next();
 }

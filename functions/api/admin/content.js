@@ -16,12 +16,16 @@ const json = (data, status = 200) =>
   });
 
 export async function onRequestGet({ env }) {
-  const stored = await env.CONTENT.get(KEY.services, { type: "json" });
-  return json({
-    services: stored?.services || DEFAULT_SERVICES,
-    extras: stored?.extras || [],
-    updatedAt: stored?.updatedAt || null,
-  });
+  try {
+    const stored = await env.CONTENT.get(KEY.services, { type: "json" });
+    return json({
+      services: stored?.services || DEFAULT_SERVICES,
+      extras: stored?.extras || [],
+      updatedAt: stored?.updatedAt || null,
+    });
+  } catch (err) {
+    return json({ error: `Could not load services: ${err.message}` }, 500);
+  }
 }
 
 export async function onRequestPut({ request, env, data }) {
