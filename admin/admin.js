@@ -353,7 +353,7 @@
     fetch("/api/admin/copy")
       .then(function (r) {
         if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
-        if (!r.ok) throw new Error("Your content could not be loaded.");
+        if (!r.ok) return r.json().then(function (b) { throw new Error(b.error || "Your content could not be loaded."); }, function () { throw new Error("Your content could not be loaded."); });
         return r.json();
       })
       .then(renderCopy)
@@ -445,7 +445,7 @@
     fetch("/api/admin/testimonials")
       .then(function (r) {
         if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
-        if (!r.ok) throw new Error("Reviews could not be loaded.");
+        if (!r.ok) return r.json().then(function (b) { throw new Error(b.error || "Reviews could not be loaded."); }, function () { throw new Error("Reviews could not be loaded."); });
         return r.json();
       })
       .then(function (data) { renderReviews(data.testimonials || []); })
@@ -461,7 +461,7 @@
     fetch("/api/admin/content")
       .then(function (r) {
         if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
-        if (!r.ok) throw new Error("Your services could not be loaded.");
+        if (!r.ok) return r.json().then(function (b) { throw new Error(b.error || "Your services could not be loaded."); }, function () { throw new Error("Your services could not be loaded."); });
         return r.json();
       })
       .then(function (data) {
@@ -480,7 +480,8 @@
   function loadPhotos() {
     fetch("/api/admin/gallery")
       .then(function (r) {
-        if (!r.ok) throw new Error("Your photos could not be loaded.");
+        if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
+        if (!r.ok) return r.json().then(function (b) { throw new Error(b.error || "Your photos could not be loaded."); }, function () { throw new Error("Your photos could not be loaded."); });
         return r.json();
       })
       .then(function (data) { renderPhotos(data.photos || []); })
