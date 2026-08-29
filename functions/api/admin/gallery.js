@@ -5,11 +5,13 @@
  * POST   — upload a photo (multipart: file, category, caption)
  * DELETE — remove a photo (?id=...)
  * PATCH  — update a caption or category (JSON: id, caption, category)
+ * PUT    — set which photo fills a slot (JSON: slots: { hero: id|null, ... })
  *
  * Photo bytes live in R2. The index lives in KV so listing stays fast.
  */
 
 import { KEY } from "../_defaults.js";
+import { SLOT_KEYS, resolveSlots } from "../_slots.js";
 
 const CATEGORIES = ["before-after", "detail", "studio"];
 const MAX_BYTES = 6 * 1024 * 1024; // 6 MB — the admin panel resizes before sending
@@ -32,7 +34,9 @@ async function writeIndex(env, index) {
 export async function onRequestGet({ env }) {
   try {
     const index = await readIndex(env);
-    return json(index);
+    // `slots` is what Kassie picked; `resolved` is what the site actually shows
+    // once the automatic choices are filled in.
+    return json({ ...index, slots: index.slots || {}, resolved: resolveSlots(index) });
   } catch (err) {
     return json({ error: `Could not load photos: ${err.message}` }, 500);
   }
@@ -112,6 +116,44 @@ export async function onRequestPatch({ request, env }) {
   return json({ ok: true, photo });
 }
 
+/**
+ * Choose which photo fills a slot. Send null (or "auto") for a slot to hand it
+ * back to the automatic picker.
+ */
+export async function onRequestPut({ request, env }) {
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return json({ error: "Could not read that request." }, 400);
+  }
+
+  const wanted = body && typeof body.slots === "object" && body.slots ? body.slots : null;
+  if (!wanted) return json({ error: "No slots were sent." }, 400);
+
+  const index = await readIndex(env);
+  const slots = index.slots && typeof index.slots === "object" ? { ...index.slots } : {};
+
+  for (const key of SLOT_KEYS) {
+    if (!(key in wanted)) continue;
+
+    const value = wanted[key];
+    if (!value || value === "auto") {
+      delete slots[key];
+      continue;
+    }
+    if (!index.photos.some((p) => p.id === value)) {
+      return json({ error: "That photo no longer exists." }, 404);
+    }
+    slots[key] = value;
+  }
+
+  index.slots = slots;
+  await writeIndex(env, index);
+
+  return json({ ok: true, slots, resolved: resolveSlots(index) });
+}
+
 export async function onRequestDelete({ request, env }) {
   const id = new URL(request.url).searchParams.get("id");
   if (!id) return json({ error: "No photo was specified." }, 400);
@@ -122,7 +164,16 @@ export async function onRequestDelete({ request, env }) {
 
   await env.PHOTOS.delete(photo.key);
   index.photos = index.photos.filter((p) => p.id !== id);
+
+  // A deleted photo must not stay pinned to a slot, or that spot would go blank
+  // instead of falling back to the automatic pick.
+  if (index.slots) {
+    for (const key of SLOT_KEYS) {
+      if (index.slots[key] === id) delete index.slots[key];
+    }
+  }
+
   await writeIndex(env, index);
 
-  return json({ ok: true });
+  return json({ ok: true, resolved: resolveSlots(index) });
 }

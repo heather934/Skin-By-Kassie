@@ -219,6 +219,91 @@
     }, Promise.resolve());
   });
 
+  /* ---------------- photo slots ---------------- */
+
+  var SLOTS = [
+    { key: "hero", label: "Home page banner" },
+    { key: "tileA", label: "Home page — left photo" },
+    { key: "tileB", label: "Home page — right photo" },
+    { key: "portrait", label: "Photo of you" }
+  ];
+
+  function photoLabel(p, n) {
+    var section = p.category === "before-after" ? "Before & after"
+                : p.category === "detail" ? "Lashes, brows & finish"
+                : "Inside the studio";
+    return (p.caption ? p.caption + " — " : "Photo " + n + " — ") + section;
+  }
+
+  function renderSlots(photos, chosen, resolved) {
+    var host = $("slots-body");
+    host.className = "";
+
+    if (!photos.length) {
+      host.innerHTML = '<div class="empty">Add a photo above and these spots will fill themselves in.</div>';
+      return;
+    }
+
+    host.innerHTML = '<div class="photos">' + SLOTS.map(function (slot) {
+      var live = resolved[slot.key];
+      var picked = chosen[slot.key] || "";
+
+      var options = '<option value="auto"' + (picked ? "" : " selected") + ">Choose for me</option>";
+      options += photos.map(function (p, i) {
+        return '<option value="' + esc(p.id) + '"' + (picked === p.id ? " selected" : "") + ">" +
+               esc(photoLabel(p, i + 1)) + "</option>";
+      }).join("");
+
+      return '' +
+      '<div class="photo" data-slot="' + esc(slot.key) + '">' +
+        (live
+          ? '<img src="/img/' + esc(live.key) + '" alt="' + esc(slot.label) + '" loading="lazy">'
+          : "") +
+        '<div class="photo__body">' +
+          "<h3>" + esc(slot.label) + "</h3>" +
+          '<div class="field"><label>Show this photo</label>' +
+          '<select data-slot-pick>' + options + "</select></div>" +
+          '<div class="photo__foot">' +
+            "<span></span>" +
+            '<span class="flash">Saved</span>' +
+          "</div>" +
+        "</div>" +
+      "</div>";
+    }).join("") + "</div>";
+  }
+
+  $("slots-body").addEventListener("change", function (e) {
+    if (!e.target.hasAttribute("data-slot-pick")) return;
+    clearError("slots-error");
+
+    var card = e.target.closest(".photo");
+    var flash = card.querySelector(".flash");
+    var payload = {};
+    payload[card.getAttribute("data-slot")] = e.target.value;
+
+    fetch("/api/admin/gallery", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ slots: payload })
+    }).then(function (r) {
+      return r.json().then(function (b) { return { ok: r.ok, b: b }; },
+                           function () { return { ok: r.ok, b: {} }; });
+    }).then(function (res) {
+      if (!res.ok) throw new Error(res.b.error || "That change was not saved.");
+      flash.textContent = "Saved";
+      flash.style.color = "";
+      flash.classList.add("show");
+      setTimeout(function () { flash.classList.remove("show"); }, 1600);
+      // Refresh the thumbnails so she can see what the site will show.
+      loadPhotos();
+    }).catch(function (err) {
+      flash.textContent = "Not saved";
+      flash.style.color = "#a8443c";
+      flash.classList.add("show");
+      showError("slots-error", err.message);
+    });
+  });
+
   function renderPhotos(photos) {
     var host = $("photos-body");
     host.className = "";
@@ -484,10 +569,16 @@
         if (!r.ok) return r.json().then(function (b) { throw new Error(b.error || "Your photos could not be loaded."); }, function () { throw new Error("Your photos could not be loaded."); });
         return r.json();
       })
-      .then(function (data) { renderPhotos(data.photos || []); })
+      .then(function (data) {
+        var photos = data.photos || [];
+        renderPhotos(photos);
+        renderSlots(photos, data.slots || {}, data.resolved || {});
+      })
       .catch(function (err) {
         $("photos-body").className = "";
         $("photos-body").innerHTML = "";
+        $("slots-body").className = "";
+        $("slots-body").innerHTML = "";
         showError("photos-error", err.message);
       });
   }

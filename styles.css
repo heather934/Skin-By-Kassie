@@ -1056,3 +1056,41 @@ p:last-child { margin-bottom: 0; }
 /* ---------- Footer credit line ---------- */
 /* No color override needed — it inherits .site-footer's ink-muted already,
    which is correct for the rose-gold footer background. */
+
+/* ---------- Photo slots (banner, home page tiles, portrait) ----------
+   These boxes ship as styled placeholders. When a photo is available the
+   script drops it in as a background and .has-photo takes over the framing,
+   so the layout never shifts and nothing breaks if the fetch fails. */
+
+.ph.has-photo {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  color: transparent;
+  border-color: rgba(255, 255, 255, 0.6);
+}
+
+.hero__media.has-photo {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+}
+
+/* Keeps the headline readable over a photo instead of over flat colour. */
+.hero__media.has-photo::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to right,
+    rgba(250, 246, 241, 0.94) 0%,
+    rgba(250, 246, 241, 0.72) 45%,
+    rgba(250, 246, 241, 0.32) 100%
+  );
+}
+
+@media (max-width: 720px) {
+  .hero__media.has-photo::after {
+    background: rgba(250, 246, 241, 0.82);
+  }
+}

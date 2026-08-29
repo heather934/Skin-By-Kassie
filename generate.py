@@ -9,6 +9,12 @@ thirteen files, so nav changes mean editing this script and re-running it.
     python3 generate.py
 
 Output goes to ../site (or OUT_DIR below).
+
+WARNING (2026-08-29): this generator is now OUT OF DATE. The HTML in this repo
+has been edited directly since it was last run — live copy hooks, the gallery
+containers and the photo slots are all in the .html files but not in here. It
+writes to a sandbox path that no longer exists, so running it won't overwrite
+anything, but do NOT treat it as the source of truth. Edit the .html files.
 """
 
 import os

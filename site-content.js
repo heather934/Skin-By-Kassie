@@ -79,12 +79,40 @@
   /* ---------------- gallery photos ---------------- */
 
   var galleries = document.querySelectorAll("[data-gallery]");
-  if (!galleries.length) return;
+  var slotHosts = document.querySelectorAll("[data-photo-slot]");
 
+  // Fill the single-photo spots: the banner, the two photos on the home page
+  // and the portrait. Each one is a styled box until a photo lands in it.
+  function fillSlots(slots) {
+    if (!slots) return;
+
+    Array.prototype.forEach.call(slotHosts, function (el) {
+      var slot = slots[el.getAttribute("data-photo-slot")];
+      if (!slot || !slot.key) return; // leave the placeholder styling alone
+
+      el.style.backgroundImage = 'url("/img/' + encodeURI(slot.key) + '")';
+      el.classList.add("has-photo");
+
+      // The banner is decorative and already marked aria-hidden. The others
+      // become real images, so give them a label and drop the holding text.
+      if (el.getAttribute("aria-hidden") !== "true") {
+        el.textContent = "";
+        el.setAttribute("role", "img");
+        el.setAttribute("aria-label", slot.caption || "Skin by Kassie");
+      }
+    });
+  }
+
+  // Only ask for photos on pages that can show them — but never bail out of the
+  // script here, or the copy and reviews below would stop loading on every page
+  // without a gallery.
+  if (galleries.length || slotHosts.length) {
   fetch("/api/gallery", { headers: { accept: "application/json" } })
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
       if (!data || !Array.isArray(data.photos) || !data.photos.length) return;
+
+      fillSlots(data.slots);
 
       Array.prototype.forEach.call(galleries, function (host) {
         var category = host.getAttribute("data-gallery");
@@ -112,6 +140,7 @@
       });
     })
     .catch(function () { /* placeholders stay */ });
+  }
 
   /* ---------------- about / bio copy ---------------- */
 
