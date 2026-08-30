@@ -80,6 +80,41 @@
 
   var galleries = document.querySelectorAll("[data-gallery]");
   var slotHosts = document.querySelectorAll("[data-photo-slot]");
+  var serviceHost = document.querySelector("[data-service-gallery]");
+
+  function shot(photo) {
+    var fig = document.createElement("figure");
+    fig.className = "shot";
+
+    var img = document.createElement("img");
+    img.src = "/img/" + photo.key;
+    img.loading = "lazy";
+    img.alt = photo.caption || "Skin by Kassie gallery photo";
+    fig.appendChild(img);
+
+    if (photo.caption) {
+      var cap = document.createElement("figcaption");
+      cap.textContent = photo.caption;
+      fig.appendChild(cap);
+    }
+    return fig;
+  }
+
+  // Photos Kassie has put on this particular service page. The whole section
+  // ships hidden, so a service with no photos shows nothing rather than an
+  // empty heading.
+  function fillServiceGallery(services) {
+    if (!serviceHost || !services) return;
+
+    var mine = services[serviceHost.getAttribute("data-service-gallery")];
+    if (!mine || !mine.length) return;
+
+    serviceHost.innerHTML = "";
+    mine.forEach(function (p) { serviceHost.appendChild(shot(p)); });
+
+    var section = serviceHost.closest("[data-service-section]");
+    if (section) section.hidden = false;
+  }
 
   // Fill the single-photo spots: the banner, the two photos on the home page
   // and the portrait. Each one is a styled box until a photo lands in it.
@@ -106,13 +141,14 @@
   // Only ask for photos on pages that can show them — but never bail out of the
   // script here, or the copy and reviews below would stop loading on every page
   // without a gallery.
-  if (galleries.length || slotHosts.length) {
+  if (galleries.length || slotHosts.length || serviceHost) {
   fetch("/api/gallery", { headers: { accept: "application/json" } })
     .then(function (r) { return r.ok ? r.json() : null; })
     .then(function (data) {
       if (!data || !Array.isArray(data.photos) || !data.photos.length) return;
 
       fillSlots(data.slots);
+      fillServiceGallery(data.services);
 
       Array.prototype.forEach.call(galleries, function (host) {
         var category = host.getAttribute("data-gallery");
@@ -120,23 +156,7 @@
         if (!mine.length) return; // leave the placeholders in place
 
         host.innerHTML = "";
-        mine.forEach(function (p) {
-          var fig = document.createElement("figure");
-          fig.className = "shot";
-
-          var img = document.createElement("img");
-          img.src = "/img/" + p.key;
-          img.loading = "lazy";
-          img.alt = p.caption || "Skin by Kassie gallery photo";
-          fig.appendChild(img);
-
-          if (p.caption) {
-            var cap = document.createElement("figcaption");
-            cap.textContent = p.caption;
-            fig.appendChild(cap);
-          }
-          host.appendChild(fig);
-        });
+        mine.forEach(function (p) { host.appendChild(shot(p)); });
       });
     })
     .catch(function () { /* placeholders stay */ });

@@ -6,12 +6,15 @@
  * DELETE — remove a photo (?id=...)
  * PATCH  — update a caption or category (JSON: id, caption, category)
  * PUT    — set which photo fills a slot (JSON: slots: { hero: id|null, ... })
+ *          and/or which photos appear on a service page
+ *          (JSON: services: { waxing: [id, ...] })
  *
  * Photo bytes live in R2. The index lives in KV so listing stays fast.
  */
 
 import { KEY } from "../_defaults.js";
 import { SLOT_KEYS, resolveSlots } from "../_slots.js";
+import { SERVICE_SLUGS, resolveServicePhotos } from "../_services.js";
 
 const CATEGORIES = ["before-after", "detail", "studio"];
 const MAX_BYTES = 6 * 1024 * 1024; // 6 MB — the admin panel resizes before sending
@@ -36,7 +39,13 @@ export async function onRequestGet({ env }) {
     const index = await readIndex(env);
     // `slots` is what Kassie picked; `resolved` is what the site actually shows
     // once the automatic choices are filled in.
-    return json({ ...index, slots: index.slots || {}, resolved: resolveSlots(index) });
+    return json({
+      ...index,
+      slots: index.slots || {},
+      services: index.services || {},
+      resolved: resolveSlots(index),
+      resolvedServices: resolveServicePhotos(index),
+    });
   } catch (err) {
     return json({ error: `Could not load photos: ${err.message}` }, 500);
   }
@@ -129,13 +138,16 @@ export async function onRequestPut({ request, env }) {
   }
 
   const wanted = body && typeof body.slots === "object" && body.slots ? body.slots : null;
-  if (!wanted) return json({ error: "No slots were sent." }, 400);
+  const wantedServices =
+    body && typeof body.services === "object" && body.services ? body.services : null;
+  if (!wanted && !wantedServices) return json({ error: "Nothing was sent to save." }, 400);
 
   const index = await readIndex(env);
   const slots = index.slots && typeof index.slots === "object" ? { ...index.slots } : {};
+  const services = index.services && typeof index.services === "object" ? { ...index.services } : {};
 
   for (const key of SLOT_KEYS) {
-    if (!(key in wanted)) continue;
+    if (!wanted || !(key in wanted)) continue;
 
     const value = wanted[key];
     if (!value || value === "auto") {
@@ -148,10 +160,36 @@ export async function onRequestPut({ request, env }) {
     slots[key] = value;
   }
 
+  for (const slug of SERVICE_SLUGS) {
+    if (!wantedServices || !(slug in wantedServices)) continue;
+
+    const ids = Array.isArray(wantedServices[slug]) ? wantedServices[slug] : [];
+    // Keep only ids that are real, and drop duplicates so a photo can't be
+    // listed twice on the same page.
+    const clean = [];
+    for (const id of ids) {
+      if (clean.includes(id)) continue;
+      if (!index.photos.some((p) => p.id === id)) {
+        return json({ error: "That photo no longer exists." }, 404);
+      }
+      clean.push(id);
+    }
+
+    if (clean.length) services[slug] = clean;
+    else delete services[slug];
+  }
+
   index.slots = slots;
+  index.services = services;
   await writeIndex(env, index);
 
-  return json({ ok: true, slots, resolved: resolveSlots(index) });
+  return json({
+    ok: true,
+    slots,
+    services,
+    resolved: resolveSlots(index),
+    resolvedServices: resolveServicePhotos(index),
+  });
 }
 
 export async function onRequestDelete({ request, env }) {
@@ -170,6 +208,15 @@ export async function onRequestDelete({ request, env }) {
   if (index.slots) {
     for (const key of SLOT_KEYS) {
       if (index.slots[key] === id) delete index.slots[key];
+    }
+  }
+
+  // Same for the service pages it was showing on.
+  if (index.services) {
+    for (const slug of SERVICE_SLUGS) {
+      if (!Array.isArray(index.services[slug])) continue;
+      index.services[slug] = index.services[slug].filter((x) => x !== id);
+      if (!index.services[slug].length) delete index.services[slug];
     }
   }
 

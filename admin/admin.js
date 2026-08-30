@@ -219,90 +219,217 @@
     }, Promise.resolve());
   });
 
-  /* ---------------- photo slots ---------------- */
+  /* ---------------- where photos show up ---------------- */
 
   var SLOTS = [
-    { key: "hero", label: "Home page banner" },
-    { key: "tileA", label: "Home page — left photo" },
-    { key: "tileB", label: "Home page — right photo" },
-    { key: "portrait", label: "Photo of you" }
+    { key: "hero", label: "Home page banner", hint: "The big photo behind the welcome text" },
+    { key: "tileA", label: "Home page — left photo", hint: "Next to \u201cThe studio\u201d" },
+    { key: "tileB", label: "Home page — right photo", hint: "Next to \u201cThe studio\u201d" },
+    { key: "portrait", label: "Photo of you", hint: "Home page and about page" }
   ];
 
-  function photoLabel(p, n) {
-    var section = p.category === "before-after" ? "Before & after"
-                : p.category === "detail" ? "Lashes, brows & finish"
-                : "Inside the studio";
-    return (p.caption ? p.caption + " — " : "Photo " + n + " — ") + section;
+  var SERVICES = [
+    { slug: "signature-facial", name: "Signature Facial", group: "Facials" },
+    { slug: "express-facial", name: "Express Facial", group: "Facials" },
+    { slug: "acne-treatment-facial", name: "Acne Treatment Facial", group: "Facials" },
+    { slug: "chemical-peel", name: "Chemical Peel", group: "Facials" },
+    { slug: "waxing", name: "Waxing", group: "Hair removal" },
+    { slug: "sugaring", name: "Sugaring", group: "Hair removal" },
+    { slug: "lash-extensions", name: "Lash Extensions", group: "Lashes & brows" },
+    { slug: "lash-lift-and-tint", name: "Lash Lift & Tint", group: "Lashes & brows" },
+    { slug: "brow-lamination", name: "Brow Lamination", group: "Lashes & brows" },
+    { slug: "brow-permanent-makeup", name: "Brow Permanent Makeup", group: "Permanent makeup" },
+    { slug: "lip-blush", name: "Lip Blush", group: "Permanent makeup" },
+    { slug: "fine-line-tattoo", name: "Fine-Line Tattoo", group: "Permanent makeup" }
+  ];
+
+  // Everything the picker needs, refreshed on every load.
+  var state = { photos: [], slots: {}, services: {}, resolved: {}, resolvedServices: {} };
+
+  function thumb(photo, selected, extra) {
+    return '<button type="button" class="pick' + (selected ? " is-picked" : "") + '" ' +
+           'data-photo-id="' + esc(photo.id) + '" ' +
+           'aria-pressed="' + (selected ? "true" : "false") + '">' +
+             '<img src="/img/' + esc(photo.key) + '" alt="' + esc(photo.caption || "Photo") + '" loading="lazy">' +
+             (extra ? '<span class="pick__badge">' + esc(extra) + "</span>" : "") +
+           "</button>";
   }
 
-  function renderSlots(photos, chosen, resolved) {
+  /* ---- the four fixed spots ---- */
+
+  function renderSlots() {
     var host = $("slots-body");
     host.className = "";
 
-    if (!photos.length) {
+    if (!state.photos.length) {
       host.innerHTML = '<div class="empty">Add a photo above and these spots will fill themselves in.</div>';
       return;
     }
 
-    host.innerHTML = '<div class="photos">' + SLOTS.map(function (slot) {
-      var live = resolved[slot.key];
-      var picked = chosen[slot.key] || "";
-
-      var options = '<option value="auto"' + (picked ? "" : " selected") + ">Choose for me</option>";
-      options += photos.map(function (p, i) {
-        return '<option value="' + esc(p.id) + '"' + (picked === p.id ? " selected" : "") + ">" +
-               esc(photoLabel(p, i + 1)) + "</option>";
-      }).join("");
+    host.innerHTML = SLOTS.map(function (slot) {
+      var live = state.resolved[slot.key];
+      var pinned = state.slots[slot.key] || "";
+      var open = openSlot === slot.key;
 
       return '' +
-      '<div class="photo" data-slot="' + esc(slot.key) + '">' +
-        (live
-          ? '<img src="/img/' + esc(live.key) + '" alt="' + esc(slot.label) + '" loading="lazy">'
-          : "") +
-        '<div class="photo__body">' +
-          "<h3>" + esc(slot.label) + "</h3>" +
-          '<div class="field"><label>Show this photo</label>' +
-          '<select data-slot-pick>' + options + "</select></div>" +
-          '<div class="photo__foot">' +
-            "<span></span>" +
-            '<span class="flash">Saved</span>' +
+      '<div class="spot" data-slot="' + esc(slot.key) + '">' +
+        '<div class="spot__head">' +
+          (live ? '<img class="spot__now" src="/img/' + esc(live.key) + '" alt="" loading="lazy">' : '<span class="spot__now spot__now--empty"></span>') +
+          '<div class="spot__text">' +
+            "<h3>" + esc(slot.label) + "</h3>" +
+            "<p>" + esc(slot.hint) + "</p>" +
+            '<p class="spot__state">' + (pinned ? "You chose this one" : "Chosen automatically") + "</p>" +
           "</div>" +
+          '<button type="button" class="btn btn--ghost" data-open-slot>' + (open ? "Close" : "Change") + "</button>" +
         "</div>" +
+        (open
+          ? '<div class="picker">' +
+              '<p class="picker__note">Tap a photo to use it here.</p>' +
+              '<div class="picks">' +
+                state.photos.map(function (p) { return thumb(p, pinned === p.id, ""); }).join("") +
+              "</div>" +
+              (pinned ? '<button type="button" class="btn btn--ghost" data-auto>Go back to choosing automatically</button>' : "") +
+            "</div>"
+          : "") +
+        '<span class="flash">Saved</span>' +
       "</div>";
-    }).join("") + "</div>";
+    }).join("");
   }
 
-  $("slots-body").addEventListener("change", function (e) {
-    if (!e.target.hasAttribute("data-slot-pick")) return;
+  var openSlot = null;
+
+  $("slots-body").addEventListener("click", function (e) {
+    var spot = e.target.closest("[data-slot]");
+    if (!spot) return;
+    var slot = spot.getAttribute("data-slot");
+
+    if (e.target.closest("[data-open-slot]")) {
+      openSlot = openSlot === slot ? null : slot;
+      renderSlots();
+      return;
+    }
+
+    if (e.target.closest("[data-auto]")) {
+      saveSlot(slot, "auto");
+      return;
+    }
+
+    var pick = e.target.closest("[data-photo-id]");
+    if (pick) saveSlot(slot, pick.getAttribute("data-photo-id"));
+  });
+
+  function saveSlot(slot, value) {
     clearError("slots-error");
-
-    var card = e.target.closest(".photo");
-    var flash = card.querySelector(".flash");
     var payload = {};
-    payload[card.getAttribute("data-slot")] = e.target.value;
+    payload[slot] = value;
 
-    fetch("/api/admin/gallery", {
+    put({ slots: payload })
+      .then(function (b) {
+        state.slots = b.slots || {};
+        state.resolved = b.resolved || {};
+        openSlot = null;
+        renderSlots();
+      })
+      .catch(function (err) { showError("slots-error", err.message); });
+  }
+
+  /* ---- photos on individual service pages ---- */
+
+  var openService = null;
+
+  function renderServices() {
+    var host = $("services-body");
+    host.className = "";
+
+    if (!state.photos.length) {
+      host.innerHTML = '<div class="empty">Once you\u2019ve added photos, you can put them on individual service pages here.</div>';
+      return;
+    }
+
+    var lastGroup = "";
+    host.innerHTML = SERVICES.map(function (svc) {
+      var chosen = state.services[svc.slug] || [];
+      var open = openService === svc.slug;
+      var heading = "";
+
+      if (svc.group !== lastGroup) {
+        lastGroup = svc.group;
+        heading = '<h3 class="group">' + esc(svc.group) + "</h3>";
+      }
+
+      return heading +
+      '<div class="spot" data-service="' + esc(svc.slug) + '">' +
+        '<div class="spot__head">' +
+          '<div class="spot__text">' +
+            "<h3>" + esc(svc.name) + "</h3>" +
+            '<p class="spot__state">' +
+              (chosen.length
+                ? chosen.length + (chosen.length === 1 ? " photo on this page" : " photos on this page")
+                : "No photos on this page yet") +
+            "</p>" +
+          "</div>" +
+          '<button type="button" class="btn btn--ghost" data-open-service>' + (open ? "Close" : "Choose") + "</button>" +
+        "</div>" +
+        (open
+          ? '<div class="picker">' +
+              '<p class="picker__note">Tap photos to add or remove them from this page. The number shows the order they\u2019ll appear in.</p>' +
+              '<div class="picks">' +
+                state.photos.map(function (p) {
+                  var at = chosen.indexOf(p.id);
+                  return thumb(p, at > -1, at > -1 ? String(at + 1) : "");
+                }).join("") +
+              "</div>" +
+            "</div>"
+          : "") +
+        '<span class="flash">Saved</span>' +
+      "</div>";
+    }).join("");
+  }
+
+  $("services-body").addEventListener("click", function (e) {
+    var spot = e.target.closest("[data-service]");
+    if (!spot) return;
+    var slug = spot.getAttribute("data-service");
+
+    if (e.target.closest("[data-open-service]")) {
+      openService = openService === slug ? null : slug;
+      renderServices();
+      return;
+    }
+
+    var pick = e.target.closest("[data-photo-id]");
+    if (!pick) return;
+
+    var id = pick.getAttribute("data-photo-id");
+    var chosen = (state.services[slug] || []).slice();
+    var at = chosen.indexOf(id);
+    if (at > -1) chosen.splice(at, 1);
+    else chosen.push(id);
+
+    clearError("services-error");
+    var payload = {};
+    payload[slug] = chosen;
+
+    put({ services: payload })
+      .then(function (b) {
+        state.services = b.services || {};
+        renderServices();
+      })
+      .catch(function (err) { showError("services-error", err.message); });
+  });
+
+  function put(body) {
+    return fetch("/api/admin/gallery", {
       method: "PUT",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ slots: payload })
+      body: JSON.stringify(body)
     }).then(function (r) {
-      return r.json().then(function (b) { return { ok: r.ok, b: b }; },
-                           function () { return { ok: r.ok, b: {} }; });
-    }).then(function (res) {
-      if (!res.ok) throw new Error(res.b.error || "That change was not saved.");
-      flash.textContent = "Saved";
-      flash.style.color = "";
-      flash.classList.add("show");
-      setTimeout(function () { flash.classList.remove("show"); }, 1600);
-      // Refresh the thumbnails so she can see what the site will show.
-      loadPhotos();
-    }).catch(function (err) {
-      flash.textContent = "Not saved";
-      flash.style.color = "#a8443c";
-      flash.classList.add("show");
-      showError("slots-error", err.message);
+      return r.json().then(
+        function (b) { if (!r.ok) throw new Error(b.error || "That change was not saved."); return b; },
+        function () { throw new Error("That change was not saved."); }
+      );
     });
-  });
+  }
 
   function renderPhotos(photos) {
     var host = $("photos-body");
@@ -570,15 +697,23 @@
         return r.json();
       })
       .then(function (data) {
-        var photos = data.photos || [];
-        renderPhotos(photos);
-        renderSlots(photos, data.slots || {}, data.resolved || {});
+        state.photos = data.photos || [];
+        state.slots = data.slots || {};
+        state.services = data.services || {};
+        state.resolved = data.resolved || {};
+        state.resolvedServices = data.resolvedServices || {};
+
+        renderPhotos(state.photos);
+        renderSlots();
+        renderServices();
       })
       .catch(function (err) {
         $("photos-body").className = "";
         $("photos-body").innerHTML = "";
         $("slots-body").className = "";
         $("slots-body").innerHTML = "";
+        $("services-body").className = "";
+        $("services-body").innerHTML = "";
         showError("photos-error", err.message);
       });
   }

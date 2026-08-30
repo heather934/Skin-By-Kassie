@@ -123,6 +123,37 @@
   .photo__body{padding:.85rem}
   .photo__body .field{margin-bottom:.6rem}
   .photo__foot{display:flex;justify-content:space-between;align-items:center;gap:.5rem}
+  /* ---- visual photo picker ---- */
+  .group{margin:1.75rem 0 .6rem;font-size:.72rem;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--ink-muted);font-weight:500}
+  .spot{border:1px solid rgba(23,19,15,.14);border-radius:10px;padding:.9rem;margin-bottom:.75rem;
+    position:relative;background:#fff}
+  .spot__head{display:flex;align-items:center;gap:.9rem}
+  .spot__now{width:60px;height:75px;object-fit:cover;border-radius:6px;flex:none;
+    border:1px solid rgba(23,19,15,.14)}
+  .spot__now--empty{background:repeating-linear-gradient(45deg,#f2eee9 0 8px,#e9e4dd 8px 16px)}
+  .spot__text{flex:1;min-width:0}
+  .spot__text h3{margin:0 0 .15rem;font-size:1rem}
+  .spot__text p{margin:0;font-size:.82rem;color:var(--ink-muted);line-height:1.35}
+  .spot__state{margin-top:.2rem!important;font-size:.75rem!important}
+  .picker{margin-top:.9rem;border-top:1px solid rgba(23,19,15,.14);padding-top:.9rem}
+  .picker__note{margin:0 0 .6rem;font-size:.82rem;color:var(--ink-muted)}
+  .picks{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:.5rem;
+    max-height:340px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+  .pick{position:relative;padding:0;border:2px solid transparent;border-radius:8px;
+    background:none;cursor:pointer;overflow:hidden;line-height:0}
+  .pick img{width:100%;aspect-ratio:4/5;object-fit:cover;display:block}
+  .pick.is-picked{border-color:var(--ok)}
+  .pick.is-picked img{opacity:.72}
+  .pick__badge{position:absolute;top:4px;right:4px;min-width:20px;height:20px;padding:0 5px;
+    border-radius:10px;background:var(--ok);color:#fff;font-size:.7rem;line-height:20px;
+    text-align:center;font-weight:500}
+  .spot .flash{position:absolute;top:.9rem;right:.9rem}
+  @media (max-width:520px){
+    .spot__head{flex-wrap:wrap}
+    .spot__head .btn{width:100%;margin-top:.5rem}
+  }
+
   .flash{font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:var(--ok);
          opacity:0;transition:opacity .3s}
   .flash.show{opacity:1}
@@ -201,9 +232,16 @@
     <h2>Where photos show up</h2>
     <p class="intro">These are the single-photo spots on the home and about pages.
       Each one picks a photo for you automatically, so nothing is ever left blank —
-      but if you'd rather choose, pick one here and it stays put.</p>
+      tap <strong>Change</strong> to choose the photo yourself.</p>
     <div id="slots-error"></div>
     <div id="slots-body" class="loading">Loading…</div>
+
+    <h2>Photos on service pages</h2>
+    <p class="intro">Put photos of your actual work on the page for that treatment.
+      Tap <strong>Choose</strong>, then tap the photos you want. A service page with
+      no photos simply doesn't show a photo section at all.</p>
+    <div id="services-error"></div>
+    <div id="services-body" class="loading">Loading…</div>
 
     <h2>All your photos</h2>
     <div id="photos-body" class="loading">Loading your photos…</div>
