@@ -225,7 +225,9 @@
     { key: "hero", label: "Home page banner", hint: "The big photo behind the welcome text" },
     { key: "tileA", label: "Home page — left photo", hint: "Next to \u201cThe studio\u201d" },
     { key: "tileB", label: "Home page — right photo", hint: "Next to \u201cThe studio\u201d" },
-    { key: "portrait", label: "Photo of you", hint: "Home page and about page" }
+    { key: "portrait", label: "Photo of you", hint: "Home page and about page" },
+    { key: "studioBand", label: "Wide studio photo", hint: "The wide banner under “Unhurried by design”" },
+    { key: "exteriorBand", label: "Studio exterior or entrance", hint: "The wide banner near “Visit”" }
   ];
 
   var SERVICES = [

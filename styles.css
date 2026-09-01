@@ -1076,6 +1076,15 @@ p:last-child { margin-bottom: 0; }
   background-position: center;
 }
 
+/* Replaces the diagonal-stripe placeholder once a photo is assigned; the
+   dark ::after overlay above keeps the statement text readable either way. */
+.band__media.has-photo {
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-position: center;
+  color: transparent;
+}
+
 /* Keeps the headline readable over a photo instead of over flat colour. */
 .hero__media.has-photo::after {
   content: "";
