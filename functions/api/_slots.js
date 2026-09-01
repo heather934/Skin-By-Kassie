@@ -29,6 +29,16 @@ export const SLOTS = [
     label: "Photo of you (home and about pages)",
     prefer: ["studio", "detail", "before-after"],
   },
+  {
+    key: "studioBand",
+    label: "Home page — wide studio photo",
+    prefer: ["studio", "detail", "before-after"],
+  },
+  {
+    key: "exteriorBand",
+    label: "Home page — studio exterior or entrance",
+    prefer: ["studio", "detail", "before-after"],
+  },
 ];
 
 export const SLOT_KEYS = SLOTS.map((s) => s.key);
