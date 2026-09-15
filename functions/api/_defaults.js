@@ -11,6 +11,7 @@ export const KEY = {
   gallery: "content:gallery",
   copy: "content:copy",
   testimonials: "content:testimonials",
+  findMe: "content:find-me",
 };
 
 export const DEFAULT_SERVICES = [
@@ -126,6 +127,31 @@ export const DEFAULT_COPY = {
           "been doing this, what drew you to skincare, and the kind of clients you " +
           "love working with. Two or three sentences is plenty.",
   },
+  // The homepage banner (hero) heading and subhead.
+  heroBanner: {
+    heading: "Skin that looks like you, on your best day",
+    body: "Facials, waxing and lashes, one client at a time.",
+  },
+  // The one-line quote over the wide studio photo. No heading — body only.
+  studioBand: {
+    heading: "",
+    body: "A small studio, built around one person at a time",
+  },
+};
+
+// The "Find me" section on the contact page — location, booking link, hours
+// and social link. Editable from the admin Content tab.
+export const DEFAULT_FIND_ME = {
+  addressLine1: "418 Eighth Street, Suite D",
+  addressLine2: "Huntington, WV 25701",
+  bookingUrl: "https://skinbyklb.square.site",
+  bookingLabel: "skinbyklb.square.site",
+  hoursMonday: "placeholder",
+  hoursTuesdayFriday: "placeholder",
+  hoursSaturday: "placeholder",
+  hoursSunday: "closed",
+  socialUrl: "https://www.facebook.com/skinbykassie",
+  socialLabel: "facebook.com/skinbykassie",
 };
 
 // Seed testimonial so the homepage never shows an empty section before Kassie
