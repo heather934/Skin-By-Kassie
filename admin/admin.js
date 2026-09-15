@@ -57,6 +57,8 @@
         "</div>" +
         '<div class="field"><label for="t' + i + '">One-line description</label>' +
         '<textarea id="t' + i + '" data-f="tagline">' + esc(s.tagline) + "</textarea></div>" +
+        '<div class="field"><label for="de' + i + '">Full description (on the service page)</label>' +
+        '<textarea id="de' + i + '" data-f="description" rows="5">' + esc(s.description || "") + "</textarea></div>" +
         '<label class="toggle"><input type="checkbox" data-f="hidden"' +
           (s.hidden ? " checked" : "") + ">Hide this from the website</label>" +
       "</div>";

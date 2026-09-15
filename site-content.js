@@ -30,7 +30,19 @@
           var value = field === "meta"
             ? [s.price, s.duration].filter(Boolean).join(" · ")
             : s[field];
-          if (typeof value === "string" && value.trim()) {
+          if (typeof value !== "string" || !value.trim()) return;
+
+          // The "What it is" write-up is one or more paragraphs — rebuild
+          // them as separate <p> elements rather than collapsing to one.
+          if (field === "description") {
+            el.innerHTML = "";
+            value.split(/\n{2,}/).forEach(function (para) {
+              if (!para.trim()) return;
+              var p = document.createElement("p");
+              p.textContent = para.trim();
+              el.appendChild(p);
+            });
+          } else {
             el.textContent = value;
           }
         }
