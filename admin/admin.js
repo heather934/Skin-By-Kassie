@@ -41,6 +41,24 @@
       .replace(/>/g, "&gt;").replace(/"/g, "&quot;");
   }
 
+  // A GET to /api/admin/* has occasionally stalled with no response and no
+  // error, leaving a panel stuck on its loading placeholder forever. Time
+  // it out and retry once before giving up, so a stall fails visibly
+  // instead of silently.
+  function fetchWithTimeout(url, timeoutMs) {
+    var controller = new AbortController();
+    var timer = setTimeout(function () { controller.abort(); }, timeoutMs);
+    return fetch(url, { signal: controller.signal })
+      .finally(function () { clearTimeout(timer); });
+  }
+
+  function loadWithRetry(url) {
+    return fetchWithTimeout(url, 12000).catch(function (err) {
+      if (err.name !== "AbortError") throw err;
+      return fetchWithTimeout(url, 12000);
+    });
+  }
+
   /* ---------------- prices ---------------- */
   function renderServices() {
     var host = $("prices-body");
@@ -571,7 +589,7 @@
   });
 
   function loadCopy() {
-    fetch("/api/admin/copy")
+    loadWithRetry("/api/admin/copy")
       .then(function (r) {
         if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
         if (!r.ok) return r.json().then(function (b) { throw new Error(b.error || "Your content could not be loaded."); }, function () { throw new Error("Your content could not be loaded."); });
@@ -581,7 +599,7 @@
       .catch(function (err) {
         $("content-body").className = "";
         $("content-body").innerHTML = "";
-        showError("content-error", err.message);
+        showError("content-error", err.name === "AbortError" ? "This is taking too long to load. Refresh the page to try again." : err.message);
       });
   }
 
@@ -644,7 +662,7 @@
   });
 
   function loadFindMe() {
-    fetch("/api/admin/find-me")
+    loadWithRetry("/api/admin/find-me")
       .then(function (r) {
         if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
         if (!r.ok) return r.json().then(function (b) { throw new Error(b.error || "Your studio details could not be loaded."); }, function () { throw new Error("Your studio details could not be loaded."); });
@@ -654,7 +672,7 @@
       .catch(function (err) {
         $("findme-body").className = "";
         $("findme-body").innerHTML = "";
-        showError("findme-error", err.message);
+        showError("findme-error", err.name === "AbortError" ? "This is taking too long to load. Refresh the page to try again." : err.message);
       });
   }
 
@@ -736,7 +754,7 @@
   });
 
   function loadReviews() {
-    fetch("/api/admin/testimonials")
+    loadWithRetry("/api/admin/testimonials")
       .then(function (r) {
         if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
         if (!r.ok) return r.json().then(function (b) { throw new Error(b.error || "Reviews could not be loaded."); }, function () { throw new Error("Reviews could not be loaded."); });
@@ -746,13 +764,13 @@
       .catch(function (err) {
         $("reviews-body").className = "";
         $("reviews-body").innerHTML = "";
-        showError("reviews-error", err.message);
+        showError("reviews-error", err.name === "AbortError" ? "This is taking too long to load. Refresh the page to try again." : err.message);
       });
   }
 
   /* ---------------- load ---------------- */
   function loadContent() {
-    fetch("/api/admin/content")
+    loadWithRetry("/api/admin/content")
       .then(function (r) {
         if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
         if (!r.ok) return r.json().then(function (b) { throw new Error(b.error || "Your services could not be loaded."); }, function () { throw new Error("Your services could not be loaded."); });
@@ -767,12 +785,12 @@
       .catch(function (err) {
         $("prices-body").className = "";
         $("prices-body").innerHTML = "";
-        showError("prices-error", err.message);
+        showError("prices-error", err.name === "AbortError" ? "This is taking too long to load. Refresh the page to try again." : err.message);
       });
   }
 
   function loadPhotos() {
-    fetch("/api/admin/gallery")
+    loadWithRetry("/api/admin/gallery")
       .then(function (r) {
         if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
         if (!r.ok) return r.json().then(function (b) { throw new Error(b.error || "Your photos could not be loaded."); }, function () { throw new Error("Your photos could not be loaded."); });
@@ -796,7 +814,7 @@
         $("slots-body").innerHTML = "";
         $("services-body").className = "";
         $("services-body").innerHTML = "";
-        showError("photos-error", err.message);
+        showError("photos-error", err.name === "AbortError" ? "This is taking too long to load. Refresh the page to try again." : err.message);
       });
   }
 
