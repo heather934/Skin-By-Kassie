@@ -173,7 +173,7 @@
     <span class="who" id="who"></span>
   </div>
   <div class="tabs" role="tablist">
-    <button class="tab" role="tab" id="tab-prices" aria-controls="panel-prices" aria-selected="true">Prices</button>
+    <button class="tab" role="tab" id="tab-prices" aria-controls="panel-prices" aria-selected="true">Services</button>
     <button class="tab" role="tab" id="tab-content" aria-controls="panel-content" aria-selected="false">Content</button>
     <button class="tab" role="tab" id="tab-photos" aria-controls="panel-photos" aria-selected="false">Photos</button>
     <button class="tab" role="tab" id="tab-reviews" aria-controls="panel-reviews" aria-selected="false">Reviews</button>
@@ -184,8 +184,9 @@
 
   <!-- ======================= PRICES ======================= -->
   <section class="panel" id="panel-prices" role="tabpanel" aria-labelledby="tab-prices">
-    <p class="intro">Change a price, a length, or the one-line description that appears
-      under each service. Nothing goes live until you press Save.</p>
+    <p class="intro">Change a price, a length, the one-line description, or the full
+      write-up on the service's own page. You can also hide a service from the
+      website entirely. Nothing goes live until you press Save.</p>
 
     <div id="prices-error"></div>
     <div id="prices-body" class="loading">Loading your services…</div>
@@ -199,11 +200,17 @@
 
   <!-- ======================= CONTENT ======================= -->
   <section class="panel" id="panel-content" role="tabpanel" aria-labelledby="tab-content" hidden>
-    <p class="intro">The "About the studio" and "Meet Kassie" text on the home page.
-      Press Save on either card to publish just that one.</p>
+    <p class="intro">The homepage banner and quote, and the "About the studio" and
+      "Meet Kassie" text. Press Save on any card to publish just that one.</p>
 
     <div id="content-error"></div>
     <div id="content-body" class="loading">Loading your content…</div>
+
+    <h2>Find me (contact page)</h2>
+    <p class="hint">Location, booking link, hours and social link shown in the
+      "Find me" section on the Contact page.</p>
+    <div id="findme-error"></div>
+    <div id="findme-body" class="loading">Loading your studio details…</div>
   </section>
 
   <!-- ======================= PHOTOS ======================= -->

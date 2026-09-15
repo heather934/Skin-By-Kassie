@@ -11,6 +11,8 @@ export async function onRequestGet({ env }) {
   const body = {
     aboutStudio: stored?.aboutStudio || DEFAULT_COPY.aboutStudio,
     meetKassie: stored?.meetKassie || DEFAULT_COPY.meetKassie,
+    heroBanner: stored?.heroBanner || DEFAULT_COPY.heroBanner,
+    studioBand: stored?.studioBand || DEFAULT_COPY.studioBand,
   };
 
   return new Response(JSON.stringify(body), {

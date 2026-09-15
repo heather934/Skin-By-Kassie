@@ -30,7 +30,19 @@
           var value = field === "meta"
             ? [s.price, s.duration].filter(Boolean).join(" · ")
             : s[field];
-          if (typeof value === "string" && value.trim()) {
+          if (typeof value !== "string" || !value.trim()) return;
+
+          // The "What it is" write-up is one or more paragraphs — rebuild
+          // them as separate <p> elements rather than collapsing to one.
+          if (field === "description") {
+            el.innerHTML = "";
+            value.split(/\n{2,}/).forEach(function (para) {
+              if (!para.trim()) return;
+              var p = document.createElement("p");
+              p.textContent = para.trim();
+              el.appendChild(p);
+            });
+          } else {
             el.textContent = value;
           }
         }
@@ -180,6 +192,28 @@
       );
     })
     .catch(function () { /* built-in copy stays */ });
+
+  /* ---------------- find-me (location, hours, booking & social links) ---------------- */
+
+  fetch("/api/find-me", { headers: { accept: "application/json" } })
+    .then(function (r) { return r.ok ? r.json() : null; })
+    .then(function (data) {
+      if (!data) return;
+      Array.prototype.forEach.call(
+        document.querySelectorAll("[data-findme]"),
+        function (el) {
+          var value = data[el.getAttribute("data-findme")];
+          if (typeof value !== "string" || !value.trim()) return;
+          var attr = el.getAttribute("data-findme-attr");
+          if (attr) {
+            el.setAttribute(attr, value);
+          } else {
+            el.textContent = value;
+          }
+        }
+      );
+    })
+    .catch(function () { /* built-in details stay */ });
 
   /* ---------------- testimonials ---------------- */
 

@@ -40,7 +40,7 @@ export async function onRequestPut({ request, env, data }) {
     return json({ error: "Services are missing from that request." }, 400);
   }
 
-  const clean = (s) => String(s ?? "").slice(0, 400).trim();
+  const clean = (s, max) => String(s ?? "").slice(0, max || 400).trim();
 
   const services = body.services.map((s) => ({
     slug: clean(s.slug),
@@ -48,6 +48,7 @@ export async function onRequestPut({ request, env, data }) {
     price: clean(s.price),
     duration: clean(s.duration),
     tagline: clean(s.tagline),
+    description: clean(s.description, 2000),
     hidden: Boolean(s.hidden),
   }));
 

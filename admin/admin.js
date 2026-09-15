@@ -57,6 +57,8 @@
         "</div>" +
         '<div class="field"><label for="t' + i + '">One-line description</label>' +
         '<textarea id="t' + i + '" data-f="tagline">' + esc(s.tagline) + "</textarea></div>" +
+        '<div class="field"><label for="de' + i + '">Full description (on the service page)</label>' +
+        '<textarea id="de' + i + '" data-f="description" rows="5">' + esc(s.description || "") + "</textarea></div>" +
         '<label class="toggle"><input type="checkbox" data-f="hidden"' +
           (s.hidden ? " checked" : "") + ">Hide this from the website</label>" +
       "</div>";
@@ -506,20 +508,24 @@
     });
   });
 
-  /* ---------------- content (About the studio / Meet Kassie) ---------------- */
+  /* ---------------- content (About the studio / Meet Kassie / banner / quote) ---------------- */
   function renderCopy(copy) {
     var host = $("content-body");
     host.className = "";
     var sections = [
-      { key: "aboutStudio", label: "About the studio", data: copy.aboutStudio },
-      { key: "meetKassie", label: "Meet Kassie", data: copy.meetKassie }
+      { key: "aboutStudio", label: "About the studio", showHeading: true, data: copy.aboutStudio },
+      { key: "meetKassie", label: "Meet Kassie", showHeading: true, data: copy.meetKassie },
+      { key: "heroBanner", label: "Homepage banner", showHeading: true, data: copy.heroBanner },
+      { key: "studioBand", label: "Studio quote (wide photo)", showHeading: false, data: copy.studioBand }
     ];
     host.innerHTML = sections.map(function (s, i) {
       return '' +
       '<div class="card" data-copy-key="' + s.key + '" style="margin-bottom:1.5rem;">' +
         "<h3>" + esc(s.label) + "</h3>" +
-        '<div class="field"><label for="cp-h' + i + '">Heading</label>' +
-        '<input type="text" id="cp-h' + i + '" data-f="heading" value="' + esc(s.data.heading) + '"></div>' +
+        (s.showHeading
+          ? '<div class="field"><label for="cp-h' + i + '">Heading</label>' +
+            '<input type="text" id="cp-h' + i + '" data-f="heading" value="' + esc(s.data.heading) + '"></div>'
+          : "") +
         '<div class="field"><label for="cp-b' + i + '">Text</label>' +
         '<textarea id="cp-b' + i + '" data-f="body">' + esc(s.data.body) + "</textarea></div>" +
         '<button class="btn" type="button" data-save-copy="' + s.key + '">Save</button> ' +
@@ -532,7 +538,8 @@
     var key = e.target.getAttribute && e.target.getAttribute("data-save-copy");
     if (!key) return;
     var card = e.target.closest(".card");
-    var heading = card.querySelector('[data-f="heading"]').value;
+    var headingEl = card.querySelector('[data-f="heading"]');
+    var heading = headingEl ? headingEl.value : "";
     var body = card.querySelector('[data-f="body"]').value;
     var flash = card.querySelector("[data-flash-copy]");
 
@@ -575,6 +582,79 @@
         $("content-body").className = "";
         $("content-body").innerHTML = "";
         showError("content-error", err.message);
+      });
+  }
+
+  /* ---------------- find me (contact page: location, hours, links) ---------------- */
+  var FIND_ME_FIELDS = [
+    { key: "addressLine1", label: "Address — line 1" },
+    { key: "addressLine2", label: "Address — line 2" },
+    { key: "bookingUrl", label: "Booking link (URL)" },
+    { key: "bookingLabel", label: "Booking link (text shown)" },
+    { key: "hoursMonday", label: "Monday" },
+    { key: "hoursTuesdayFriday", label: "Tuesday to Friday" },
+    { key: "hoursSaturday", label: "Saturday" },
+    { key: "hoursSunday", label: "Sunday" },
+    { key: "socialUrl", label: "Social link (URL)" },
+    { key: "socialLabel", label: "Social link (text shown)" }
+  ];
+
+  function renderFindMe(data) {
+    var host = $("findme-body");
+    host.className = "";
+    host.innerHTML = '<div class="card">' +
+      FIND_ME_FIELDS.map(function (f, i) {
+        return '<div class="field"><label for="fm-' + i + '">' + esc(f.label) + '</label>' +
+          '<input type="text" id="fm-' + i + '" data-f="' + f.key + '" value="' + esc(data[f.key]) + '"></div>';
+      }).join("") +
+      '<button class="btn" type="button" id="save-findme">Save</button> ' +
+      '<span class="flash" id="flash-findme">Saved</span>' +
+    "</div>";
+  }
+
+  document.addEventListener("click", function (e) {
+    if (e.target.id !== "save-findme") return;
+    var card = e.target.closest(".card");
+    var payload = {};
+    FIND_ME_FIELDS.forEach(function (f) {
+      payload[f.key] = card.querySelector('[data-f="' + f.key + '"]').value;
+    });
+    var flash = $("flash-findme");
+
+    e.target.disabled = true;
+    fetch("/api/admin/find-me", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify(payload)
+    })
+      .then(function (r) { if (!r.ok) throw new Error(); return r.json(); })
+      .then(function () {
+        e.target.disabled = false;
+        flash.textContent = "Saved — live on the site now";
+        flash.style.color = "";
+        flash.classList.add("show");
+        setTimeout(function () { flash.classList.remove("show"); }, 2200);
+      })
+      .catch(function () {
+        e.target.disabled = false;
+        flash.textContent = "Could not save — try again";
+        flash.style.color = "#8a2f24";
+        flash.classList.add("show");
+      });
+  });
+
+  function loadFindMe() {
+    fetch("/api/admin/find-me")
+      .then(function (r) {
+        if (r.status === 403) throw new Error("You're not signed in as the studio owner. Close this tab and open the admin link again.");
+        if (!r.ok) return r.json().then(function (b) { throw new Error(b.error || "Your studio details could not be loaded."); }, function () { throw new Error("Your studio details could not be loaded."); });
+        return r.json();
+      })
+      .then(renderFindMe)
+      .catch(function (err) {
+        $("findme-body").className = "";
+        $("findme-body").innerHTML = "";
+        showError("findme-error", err.message);
       });
   }
 
@@ -730,5 +810,6 @@
   loadContent();
   loadPhotos();
   loadCopy();
+  loadFindMe();
   loadReviews();
 })();

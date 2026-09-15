@@ -18,6 +18,8 @@ export async function onRequestGet({ env }) {
     return json({
       aboutStudio: stored?.aboutStudio || DEFAULT_COPY.aboutStudio,
       meetKassie: stored?.meetKassie || DEFAULT_COPY.meetKassie,
+      heroBanner: stored?.heroBanner || DEFAULT_COPY.heroBanner,
+      studioBand: stored?.studioBand || DEFAULT_COPY.studioBand,
     });
   } catch (err) {
     return json({ error: `Could not load content: ${err.message}` }, 500);
@@ -41,6 +43,8 @@ export async function onRequestPut({ request, env }) {
   const payload = {
     aboutStudio: section(body.aboutStudio),
     meetKassie: section(body.meetKassie),
+    heroBanner: section(body.heroBanner),
+    studioBand: section(body.studioBand),
   };
 
   await env.CONTENT.put(KEY.copy, JSON.stringify(payload));
